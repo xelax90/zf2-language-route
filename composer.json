@@ -1,0 +1,12 @@
+{
+    "name": "xelax90/zf2-language-route",
+    "description": "Adds language prefix to every route",
+    "license": "GPLv2",
+    "authors": [
+        {
+            "name": "Aleksandr",
+            "email": "schurix@gmx.de"
+        }
+    ],
+    "require": {}
+}
