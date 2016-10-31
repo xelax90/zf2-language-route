@@ -22,6 +22,8 @@ namespace ZF2LanguageRoute\Listener;
 
 use Zend\EventManager\AbstractListenerAggregate;
 use Zend\EventManager\EventManagerInterface;
+use Interop\Container\ContainerInterface;
+use Zend\Mvc\MvcEvent;
 
 /**
  * Description of RouteListener
@@ -30,12 +32,14 @@ use Zend\EventManager\EventManagerInterface;
  */
 class RouteListener extends AbstractListenerAggregate{
 	
+	/** @var ContainerInterface */
 	protected $container;
-
-
-
-
-	public function attach(EventManagerInterface $events) {
-		
+	
+	public function attach(EventManagerInterface $events, $priority = 1) {
+		$this->listeners[] = $events->attach(MvcEvent::EVENT_ROUTE, [$this, 'onRoute'], $priority);
+	}
+	
+	public function onRoute(){
+		echo 'route event handled';
 	}
 }

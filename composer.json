@@ -8,5 +8,10 @@
             "email": "schurix@gmx.de"
         }
     ],
+    "autoload": {
+        "psr-4": {
+            "ZF2LanguageRoute\\": "src/"
+        }
+    },
     "require": {}
 }
