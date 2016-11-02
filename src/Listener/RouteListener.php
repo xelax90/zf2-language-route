@@ -22,7 +22,7 @@ namespace ZF2LanguageRoute\Listener;
 
 use Zend\EventManager\AbstractListenerAggregate;
 use Zend\EventManager\EventManagerInterface;
-use Interop\Container\ContainerInterface;
+use ZF2LanguageRoute\Options\LanguageRouteOptions;
 use Zend\Mvc\MvcEvent;
 
 /**
@@ -32,14 +32,17 @@ use Zend\Mvc\MvcEvent;
  */
 class RouteListener extends AbstractListenerAggregate{
 	
-	/** @var ContainerInterface */
-	protected $container;
+	/** @var LanguageRouteOptions */
+	protected $options;
+	
+	function __construct(LanguageRouteOptions $options) {
+		$this->options = $options;
+	}
 	
 	public function attach(EventManagerInterface $events, $priority = 1) {
 		$this->listeners[] = $events->attach(MvcEvent::EVENT_ROUTE, [$this, 'onRoute'], $priority);
 	}
 	
 	public function onRoute(){
-		echo 'route event handled';
 	}
 }

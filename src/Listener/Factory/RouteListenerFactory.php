@@ -22,14 +22,17 @@ namespace ZF2LanguageRoute\Listener\Factory;
 
 use Zend\ServiceManager\Factory\FactoryInterface;
 use Interop\Container\ContainerInterface;
+use ZF2LanguageRoute\Options\LanguageRouteOptions;
 
 /**
- * Description of RouteListenerFactory
+ * Creates RouteListener instance
  *
  * @author schurix
  */
 class RouteListenerFactory implements FactoryInterface{
-	public function __invoke(ContainerInterface $container, $requestedName, mixed $options = null) {
-		return new $requestedName();
+	public function __invoke(ContainerInterface $container, $requestedName, array $options = null) {
+		$options = $container->get(LanguageRouteOptions::class);
+		
+		return new $requestedName($options);
 	}
 }

@@ -20,11 +20,13 @@
 
 namespace ZF2LanguageRoute\Mvc\Router\Http;
 
-use Zend\Mvc\Router\Http\TranslatorAwareTreeRouteStack;
-use Zend\Mvc\Router\Http\RouteMatch;
+use Zend\Mvc\I18n\Router\TranslatorAwareTreeRouteStack;
+use Zend\Router\Http\RouteMatch;
 use Zend\I18n\Translator\TranslatorInterface;
 use Zend\Stdlib\RequestInterface;
-use SkelletonApplication\Options\SkelletonOptions;
+use ZF2LanguageRoute\Options\LanguageRouteOptions;
+use Zend\Authentication\AuthenticationServiceInterface;
+use ZF2LanguageRoute\Entity\LocaleUserInterface;
 
 /**
  * Manages multilanguage routes by adding a language key to the baseUrl
@@ -33,6 +35,28 @@ use SkelletonApplication\Options\SkelletonOptions;
  */
 class LanguageTreeRouteStack extends TranslatorAwareTreeRouteStack {
 	
+	/** @var LanguageRouteOptions */
+	protected $languageOptions;
+	
+	/** @var AuthenticationServiceInterface */
+	protected $authenticationService;
+	
+	function getLanguageOptions() {
+		return $this->languageOptions;
+	}
+
+	function setLanguageOptions(LanguageRouteOptions $languageOptions) {
+		$this->languageOptions = $languageOptions;
+	}
+	
+	function getAuthenticationService() {
+		return $this->authenticationService;
+	}
+
+	function setAuthenticationService(AuthenticationServiceInterface $authenticationService) {
+		$this->authenticationService = $authenticationService;
+	}
+
     /**
      * assemble(): defined by \Zend\Mvc\Router\RouteInterface interface.
      *
@@ -55,31 +79,32 @@ class LanguageTreeRouteStack extends TranslatorAwareTreeRouteStack {
 			$translator = $this->getTranslator();
 		}
 		
-		/* @var $skelletonOptions SkelletonOptions */
-		$skelletonOptions = $this->getRoutePluginManager()->getServiceLocator()->get(SkelletonOptions::class);
-		$languages = $skelletonOptions->getLanguages();
+		$languages = $this->getRouteLanguages();
 		
 		$oldBase = $this->baseUrl; // save old baseUrl
-		
 		// only add language key when more than one language is supported
 		if(count($languages) > 1){
 			if(isset($params['locale'])){
 				// use parameter if provided
 				$locale = $params['locale'];
-				$key = array_search($locale, $languages); // get key for locale
+				// get key for locale
+				$key = array_search($locale, $languages); 
 			} elseif(is_callable(array($translator, 'getLocale'))){
 				// use getLocale if possible
 				$locale = $translator->getLocale();
-				$key = array_search($locale, $languages); // get key for locale
+				// get key for locale
+				$key = array_search($locale, $languages); 
 			}
 			
 			if(!empty($key)){
-				$this->setBaseUrl($oldBase . '/'.$key); // add key to baseUrl
+				// add key to baseUrl
+				$this->setBaseUrl($oldBase . '/'.$key); 
 			}
 		}
 		
 		$res = parent::assemble($params, $options);
-		$this->setBaseUrl($oldBase); // restore baseUrl
+		// restore baseUrl
+		$this->setBaseUrl($oldBase); 
 		return $res;
 	}
 	
@@ -93,10 +118,12 @@ class LanguageTreeRouteStack extends TranslatorAwareTreeRouteStack {
      * @return RouteMatch|null
      */
 	public function match(RequestInterface $request, $pathOffset = null, array $options = array()) {
-		// do not try to match language when not on top level
-		if($pathOffset !== null){
+		// Languages should only be added on top level. Since there seems to be 
+		// no way to ensure this stack is only at top level, the language has
+		// top be checked every time this method is called.
+		/* if($pathOffset !== null){
 			return parent::match($request, $pathOffset, $options);
-		}
+		} */
 		
         if (!method_exists($request, 'getUri')) {
             return null;
@@ -114,39 +141,42 @@ class LanguageTreeRouteStack extends TranslatorAwareTreeRouteStack {
 			$translator = $this->getTranslator();
 		}
 		
-		/* @var $skelletonOptions SkelletonOptions */
-		$skelletonOptions = $this->getRoutePluginManager()->getServiceLocator()->get(SkelletonOptions::class);
-		$languages = $skelletonOptions->getLanguages();
+		$languages = $this->getRouteLanguages();
 		$languageKeys = array_keys($languages);
 		
-		$oldBase = $this->baseUrl;
+		// save old baseUrl
+		$oldBase = $this->baseUrl; 
 		$locale = null;
 		
+		// extract /-separated path parts
 		$uri = $request->getUri();
 		$baseUrlLength = strlen($this->baseUrl);
 		$path = ltrim(substr($uri->getPath(), $baseUrlLength), '/');
 		$pathParts = explode('/', $path);
 		
+		// check if language was provided in first part
 		if(count($languages) > 1 && in_array($pathParts[0], $languageKeys)){
+			// if language was provided, save the locale and adjust the baseUrl
 			$locale = $languages[$pathParts[0]];
 			$this->setBaseUrl($oldBase . '/'.$pathParts[0]);
 			if(is_callable(array($translator, 'setLocale'))){
+				// change translator locale
 				$translator->setLocale($locale);
 			}
-		} else {
-			// try to get user language
-			$authService = $this->getRoutePluginManager()->getServiceLocator()->get('zfcuser_auth_service');
-			if($authService->hasIdentity()){
-				$user = $authService->getIdentity();
-				if($user->getLocale() && in_array($user->getLocale(), $languages)){
-					$locale = $user->getLocale();
+		} elseif(!empty($this->getAuthenticationService()) && $this->getAuthenticationService()->hasIdentity()) {
+			// try to get user language if no language was provided by url
+			$user = $this->getAuthenticationService()->getIdentity();
+			if($user instanceof LocaleUserInterface){
+				$userLocale = $user->getLocale();
+				if(in_array($userLocale, $languages)){
+					$locale = $userLocale;
 				}
 			}
 
-			if(empty($locale) && !empty($translator) && is_callable(array($translator, 'getLocale'))){
-				// use getLocale if possible
-				$locale = $translator->getLocale();
-			}
+		}
+		if(empty($locale) && !empty($translator) && is_callable(array($translator, 'getLocale'))){
+			// If stil no language found, check the translator locale
+			$locale = $translator->getLocale();
 		}
 		
 		$res = parent::match($request, $pathOffset, $options);
@@ -155,6 +185,13 @@ class LanguageTreeRouteStack extends TranslatorAwareTreeRouteStack {
 			$res->setParam('locale', $locale);
 		}
 		return $res;
+	}
+	
+	protected function getRouteLanguages(){
+		if(!empty($this->getLanguageOptions())){
+			return $this->getLanguageOptions()->getLanguages();
+		}
+		return [];
 	}
 	
 }
