@@ -25,6 +25,14 @@ class LanguageRouteOptions extends AbstractOptions{
 	 */
 	protected $languages = ['de' => 'de_DE', 'en' => 'en_US'];
 	
+	/**
+	 * This route name will be used if no RouteMatch instance is provided to
+	 * the languageSwitch ViewHelper. This happens for example if a 404 error
+	 * occurs.
+	 * @var string
+	 */
+	protected $homeRoute = 'home';
+	
 	function getLanguages() {
 		return $this->languages;
 	}
@@ -32,4 +40,13 @@ class LanguageRouteOptions extends AbstractOptions{
 	function setLanguages(array $languages) {
 		$this->languages = $languages;
 	}
+	
+	function getHomeRoute() {
+		return $this->homeRoute;
+	}
+
+	function setHomeRoute($homeRoute) {
+		$this->homeRoute = $homeRoute;
+	}
+	
 }

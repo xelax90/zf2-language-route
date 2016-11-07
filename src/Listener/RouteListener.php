@@ -24,9 +24,15 @@ use Zend\EventManager\AbstractListenerAggregate;
 use Zend\EventManager\EventManagerInterface;
 use ZF2LanguageRoute\Options\LanguageRouteOptions;
 use Zend\Mvc\MvcEvent;
+use Zend\Router\RouteStackInterface;
+use Zend\Stdlib\RequestInterface;
+use ZF2LanguageRoute\Mvc\Router\Http\LanguageTreeRouteStack;
+use Zend\I18n\Translator\TranslatorInterface;
+use Zend\Authentication\AuthenticationServiceInterface;
+use ZF2LanguageRoute\Entity\LocaleUserInterface;
 
 /**
- * Description of RouteListener
+ * Injects language into translator and updates user locale
  *
  * @author schurix
  */
@@ -35,14 +41,50 @@ class RouteListener extends AbstractListenerAggregate{
 	/** @var LanguageRouteOptions */
 	protected $options;
 	
-	function __construct(LanguageRouteOptions $options) {
-		$this->options = $options;
-	}
+	/** @var RouteStackInterface */
+	protected $router;
 	
-	public function attach(EventManagerInterface $events, $priority = 1) {
+	/** @var RequestInterface */
+	protected $request;
+	
+	/** @var AuthenticationServiceInterface */
+	protected $authService;
+	 /** @var TranslatorInterface */
+	protected $translator;
+	
+	function __construct(LanguageRouteOptions $options, RouteStackInterface $router, RequestInterface $request, TranslatorInterface $translator, AuthenticationServiceInterface $authService = null) {
+		$this->options = $options;
+		$this->router = $router;
+		$this->request = $request;
+		$this->authService = $authService;
+		$this->translator = $translator;
+	}
+
+	
+	public function attach(EventManagerInterface $events, $priority = 10) {
 		$this->listeners[] = $events->attach(MvcEvent::EVENT_ROUTE, [$this, 'onRoute'], $priority);
 	}
 	
-	public function onRoute(){
+	public function onRoute($e){
+		$router = $this->router;
+		if(!$router instanceof LanguageTreeRouteStack){
+			return;
+		}
+		$this->router->match($this->request);
+		$locale = $this->router->getLastMatchedLocale();
+		if(empty($locale)){
+			return;
+		}
+		
+		if(is_callable([$this->translator, 'setLocale'])){
+			$this->translator->setLocale($locale);
+		}
+		
+		if($this->authService && $this->authService->hasIdentity()){
+			$user = $this->authService->getIdentity();
+			if($user instanceof LocaleUserInterface){
+				$user->setLocale($locale);
+			}
+		}
 	}
 }

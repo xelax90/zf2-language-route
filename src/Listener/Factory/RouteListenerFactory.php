@@ -31,8 +31,15 @@ use ZF2LanguageRoute\Options\LanguageRouteOptions;
  */
 class RouteListenerFactory implements FactoryInterface{
 	public function __invoke(ContainerInterface $container, $requestedName, array $options = null) {
-		$options = $container->get(LanguageRouteOptions::class);
+		$languageOptions = $container->get(LanguageRouteOptions::class);
+        $router = $container->get('router');
+        $request = $container->get('request');
+		$translator = $container->get('MvcTranslator');
+		$authService = null;
+		if($container->has('zfcuser_auth_service')){
+			$authService = $container->get('zfcuser_auth_service');
+		}
 		
-		return new $requestedName($options);
+		return new $requestedName($languageOptions, $router, $request, $translator, $authService);
 	}
 }

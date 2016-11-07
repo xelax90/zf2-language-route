@@ -36,8 +36,8 @@ class LanguageSwitch extends AbstractTranslatorHelper{
 	protected static $navbarBoxFormat = '<li class="%s">%s</li>';
 	protected static $navbarOptionsFormat = '<ul class="%s">%s</ul>';
 	protected static $navbarOptionFormat = '<li class="%s">%s</li>';
-	protected static $navbarCaptionLinkFormat = '<a class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"><span class="%s" lang="%s">%s</span><span class="caret"></span></a>';
-	protected static $navbarOptionLinkFormat = '<a href="%s"><span class="%s" lang="%s">%s</span></a>';
+	protected static $navbarCaptionLinkFormat = '<a class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"><span class="%s" lang="%s"></span><span class="sr-only">%s</span><span class="caret"></span></a>';
+	protected static $navbarOptionLinkFormat = '<a href="%s"><span class="%s" lang="%s"></span><span class="sr-only">%s</span></a>';
 	protected static $navbarBoxClass  = 'dropdown';
 	protected static $navbarOptionsClass  = 'dropdown-menu';
 	protected static $navbarOptionClass  = 'language-option';
@@ -65,7 +65,7 @@ class LanguageSwitch extends AbstractTranslatorHelper{
 		return $this->languageOptions;
 	}
 
-	public function __invoke($currentLocale = null, $renderType = self::RENDER_TYPE_LIST_ITEM, $config = array()) {
+	public function __invoke($renderType = self::RENDER_TYPE_LIST_ITEM, $currentLocale = null, $config = array()) {
 		/* @var $renderer \Zend\View\Renderer\PhpRenderer */
         $renderer = $this->getView();
         if (!method_exists($renderer, 'plugin')) {
@@ -165,7 +165,11 @@ class LanguageSwitch extends AbstractTranslatorHelper{
 				$parameters = $this->getRouteMatch()->getParams();
 			}
 			$parameters['locale'] = $locale;
-			$url = $urlPlugin(null, $parameters);
+			$routeName = null;
+			if(!$this->getRouteMatch()){
+				$routeName = $this->getLanguageOptions()->getHomeRoute();
+			}
+			$url = $urlPlugin($routeName, $parameters);
 			$link = sprintf(static::$divOptionLinkFormat, $optionLinkClass, $url, $localeKey);
 			$options .= sprintf(static::$divOptionFormat, $optClass, $link);
 		}
@@ -230,7 +234,11 @@ class LanguageSwitch extends AbstractTranslatorHelper{
 				$parameters = $this->getRouteMatch()->getParams();
 			}
 			$parameters['locale'] = $locale;
-			$url = $urlPlugin(null, $parameters);
+			$routeName = null;
+			if(!$this->getRouteMatch()){
+				$routeName = $this->getLanguageOptions()->getHomeRoute();
+			}
+			$url = $urlPlugin($routeName, $parameters);
 			$link = sprintf(static::$navbarOptionLinkFormat, $url, $optionLinkClass, $localeKey, $locale);
 			$options .= sprintf(static::$navbarOptionFormat, $optClass, $link);
 		}

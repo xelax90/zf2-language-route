@@ -41,6 +41,9 @@ class LanguageTreeRouteStack extends TranslatorAwareTreeRouteStack {
 	/** @var AuthenticationServiceInterface */
 	protected $authenticationService;
 	
+	/** @var string */
+	protected $lastMatchedLocale;
+	
 	function getLanguageOptions() {
 		return $this->languageOptions;
 	}
@@ -55,6 +58,15 @@ class LanguageTreeRouteStack extends TranslatorAwareTreeRouteStack {
 
 	function setAuthenticationService(AuthenticationServiceInterface $authenticationService) {
 		$this->authenticationService = $authenticationService;
+	}
+	
+	/**
+	 * Returns the locale that was found in the last matched URL. It is also 
+	 * stored if no RouteMatch instance is provided (e.g. 404 error)
+	 * @return string
+	 */
+	function getLastMatchedLocale() {
+		return $this->lastMatchedLocale;
 	}
 
     /**
@@ -159,10 +171,6 @@ class LanguageTreeRouteStack extends TranslatorAwareTreeRouteStack {
 			// if language was provided, save the locale and adjust the baseUrl
 			$locale = $languages[$pathParts[0]];
 			$this->setBaseUrl($oldBase . '/'.$pathParts[0]);
-			if(is_callable(array($translator, 'setLocale'))){
-				// change translator locale
-				$translator->setLocale($locale);
-			}
 		} elseif(!empty($this->getAuthenticationService()) && $this->getAuthenticationService()->hasIdentity()) {
 			// try to get user language if no language was provided by url
 			$user = $this->getAuthenticationService()->getIdentity();
@@ -178,6 +186,9 @@ class LanguageTreeRouteStack extends TranslatorAwareTreeRouteStack {
 			// If stil no language found, check the translator locale
 			$locale = $translator->getLocale();
 		}
+		
+		// set the last matched locale
+		$this->lastMatchedLocale = $locale;
 		
 		$res = parent::match($request, $pathOffset, $options);
 		$this->setBaseUrl($oldBase);
