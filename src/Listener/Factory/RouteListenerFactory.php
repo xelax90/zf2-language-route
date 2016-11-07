@@ -36,10 +36,14 @@ class RouteListenerFactory implements FactoryInterface{
         $request = $container->get('request');
 		$translator = $container->get('MvcTranslator');
 		$authService = null;
+		$userMapper = null;
 		if($container->has('zfcuser_auth_service')){
 			$authService = $container->get('zfcuser_auth_service');
 		}
+		if($container->has('zfcuser_user_mapper')){
+			$userMapper = $container->get('zfcuser_user_mapper');
+		}
 		
-		return new $requestedName($languageOptions, $router, $request, $translator, $authService);
+		return new $requestedName($languageOptions, $router, $request, $translator, $authService, $userMapper);
 	}
 }

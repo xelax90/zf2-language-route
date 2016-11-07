@@ -30,6 +30,7 @@ use ZF2LanguageRoute\Mvc\Router\Http\LanguageTreeRouteStack;
 use Zend\I18n\Translator\TranslatorInterface;
 use Zend\Authentication\AuthenticationServiceInterface;
 use ZF2LanguageRoute\Entity\LocaleUserInterface;
+use ZfcUser\Mapper\User as ZfcUserMapper;
 
 /**
  * Injects language into translator and updates user locale
@@ -49,15 +50,20 @@ class RouteListener extends AbstractListenerAggregate{
 	
 	/** @var AuthenticationServiceInterface */
 	protected $authService;
+	
+	/** @var ZfcUserMapper */
+	protected $userMapper;
+	
 	 /** @var TranslatorInterface */
 	protected $translator;
 	
-	function __construct(LanguageRouteOptions $options, RouteStackInterface $router, RequestInterface $request, TranslatorInterface $translator, AuthenticationServiceInterface $authService = null) {
+	function __construct(LanguageRouteOptions $options, RouteStackInterface $router, RequestInterface $request, TranslatorInterface $translator, AuthenticationServiceInterface $authService = null, ZfcUserMapper $userMapper = null) {
 		$this->options = $options;
 		$this->router = $router;
 		$this->request = $request;
 		$this->authService = $authService;
 		$this->translator = $translator;
+		$this->userMapper = $userMapper;
 	}
 
 	
@@ -84,6 +90,10 @@ class RouteListener extends AbstractListenerAggregate{
 			$user = $this->authService->getIdentity();
 			if($user instanceof LocaleUserInterface){
 				$user->setLocale($locale);
+			}
+			// use the zfc user mapper to update if available
+			if($this->userMapper){
+				$this->userMapper->update($user);
 			}
 		}
 	}
