@@ -7,9 +7,6 @@ namespace ZF2LanguageRoute\Entity;
  * @author schurix
  */
 trait LocaleUserTrait{
-	/** @var string */
-	protected $locale;
-	
 	/** 
 	 * Returns the stored user locale
 	 * @see LocaleUserInterface
