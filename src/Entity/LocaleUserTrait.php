@@ -7,13 +7,25 @@ namespace ZF2LanguageRoute\Entity;
  * @author schurix
  */
 trait LocaleUserTrait{
+	/** @var string */
 	protected $locale;
 	
+	/** 
+	 * Returns the stored user locale
+	 * @see LocaleUserInterface
+	 * @return string
+	 */
 	function getLocale() {
 		return $this->locale;
 	}
 
+	/** 
+	 * Sets the user locale
+	 * @see LocaleUserInterface
+	 * @param string $locale New locale
+	 */
 	function setLocale($locale) {
 		$this->locale = $locale;
+		return $this;
 	}
 }

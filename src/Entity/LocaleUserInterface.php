@@ -7,7 +7,15 @@ namespace ZF2LanguageRoute\Entity;
  * @author schurix
  */
 interface LocaleUserInterface {
+	/** 
+	 * Returns the stored user locale
+	 * @return string
+	 */
 	public function getLocale();
 	
+	/** 
+	 * Sets the user locale
+	 * @param string $locale New locale
+	 */
 	public function setLocale($locale);
 }
