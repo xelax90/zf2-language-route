@@ -23,7 +23,8 @@ namespace ZF2LanguageRoute\Listener;
 use Zend\EventManager\AbstractListenerAggregate;
 use Zend\EventManager\EventManagerInterface;
 use ZF2LanguageRoute\Options\LanguageRouteOptions;
-use Zend\Mvc\MvcEvent;
+use Zend\Mvc\MvcEvent as ZFMvcEvent;
+use Laminas\Mvc\MvcEvent as LaminasMvcEvent;
 use Zend\Router\RouteStackInterface;
 use Zend\Stdlib\RequestInterface;
 use ZF2LanguageRoute\Mvc\Router\Http\LanguageTreeRouteStack;
@@ -66,11 +67,17 @@ class RouteListener extends AbstractListenerAggregate{
 		$this->userMapper = $userMapper;
 	}
 
-	
+
 	public function attach(EventManagerInterface $events, $priority = 10) {
-		$this->listeners[] = $events->attach(MvcEvent::EVENT_ROUTE, [$this, 'onRoute'], $priority);
+        if (class_exists(ZFMvcEvent::class)) {
+            $this->listeners[] = $events->attach(ZFMvcEvent::EVENT_ROUTE, [$this, 'onRoute'], $priority);
+        }
+
+        if (class_exists(LaminasMvcEvent::class)) {
+            $this->listeners[] = $events->attach(LaminasMvcEvent::EVENT_ROUTE, [$this, 'onRoute'], $priority);
+        }
 	}
-	
+
 	public function onRoute($e){
 		$router = $this->router;
 		if(!$router instanceof LanguageTreeRouteStack){

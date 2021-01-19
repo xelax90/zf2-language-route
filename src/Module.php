@@ -7,7 +7,8 @@ use Zend\ModuleManager\Feature\ServiceProviderInterface;
 use Zend\ModuleManager\Feature\BootstrapListenerInterface;
 use Zend\EventManager\EventInterface;
 use Zend\Mvc\MvcEvent;
-use Zend\Router\Http\TreeRouteStack;
+use Zend\Router\Http\TreeRouteStack as ZFTreeRouteStack;
+use Laminas\Router\Http\TreeRouteStack as LaminasTreeRouteStack;
 
 class Module implements ConfigProviderInterface, ServiceProviderInterface, BootstrapListenerInterface, ViewHelperProviderInterface{
 	
@@ -37,7 +38,8 @@ class Module implements ConfigProviderInterface, ServiceProviderInterface, Boots
 			],
 			'delegators' => [
 				'HttpRouter' => [ Mvc\Router\Http\Factory\LanguageTreeRouteStackDelegatorFactory::class ],
-				TreeRouteStack::class => [ Mvc\Router\Http\Factory\LanguageTreeRouteStackDelegatorFactory::class ],
+				ZFTreeRouteStack::class => [ Mvc\Router\Http\Factory\LanguageTreeRouteStackDelegatorFactory::class ],
+				LaminasTreeRouteStack::class => [ Mvc\Router\Http\Factory\LanguageTreeRouteStackDelegatorFactory::class ],
 			]
 		];
 	}
